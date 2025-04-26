@@ -5,7 +5,7 @@ import requests
 import pandas as pd
 from datetime import datetime
 from bs4 import BeautifulSoup
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 from urllib.error import *
 from urllib.parse import urljoin
 from email.mime.text import MIMEText
@@ -14,14 +14,14 @@ from dotenv import load_dotenv
 import os
 import sys
 
-load_dotenv()
+load_dotenv('SMTP_Credentials.env')
 
 # SMTP (email) server settings
 smtp_server = 'smtp.gmail.com'
 smtp_port = 587
 smtp_user = os.getenv('SMTP_USER')
 smtp_password = os.getenv('SMTP_PASSWORD')
-recipient_email = os.getenv('RECIPIENT_EMAIL
+recipient_email = os.getenv('RECIPIENT_EMAIL')
 
 # Function to send an email alert if a webpage is unresponsive
 def send_email(url, error):
@@ -37,7 +37,7 @@ def send_email(url, error):
         smtp.ehlo()
         smtp.starttls()  # Secure the connection
         smtp.login(smtp_user, smtp_password)
-        smtp.sendmail(smtp_user, recipient_email, msg.as_string)
+        smtp.sendmail(smtp_user, recipient_email, msg.as_string())
 
 # Function to extract all internal URLs from a given main website URL
 def extract_urls(main_url):
@@ -66,7 +66,8 @@ def monitor_webpages(urls_to_monitor):
     while True:
         for url in urls_to_monitor:
             try:
-                response = urlopen(url)
+                req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+                response = urlopen(req)
                 # If the page doesn't return a 200 OK status, treat it as an error
                 if response.status != 200:
                     raise HTTPError(url, response.status, "Page not reachable", None, None)
